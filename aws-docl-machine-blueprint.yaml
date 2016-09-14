@@ -1,0 +1,215 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.4.1/types.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.4.1/plugin.yaml
+  - http://www.getcloudify.org/spec/aws-plugin/1.4.1/plugin.yaml
+  - inputs.yaml
+
+inputs:
+
+  #############################
+  # Provider specific Inputs
+  #############################
+
+  aws_access_key_id:
+    type: string
+    default: ''
+
+  aws_secret_access_key:
+    type: string
+    default: ''
+
+  ec2_region_name:
+    type: string
+    default: 'us-east-1'
+
+  use_existing_keypair:
+    type: boolean
+    default: false
+
+  keypair_name:
+    type: string
+    default: ''
+
+  ssh_key_filename:
+    type: string
+    default: ''
+
+  use_existing_group:
+    type: boolean
+    default: false
+
+  security_group_name:
+    type: string
+    default: 'cloudify-manager-security-group'
+
+  server_name:
+    type: string
+    default: ''
+
+  ssh_user:
+    type: string
+    default: centos
+
+  ssh_port:
+    type: string
+    default: 22
+    description: >
+      Manager SSH port
+
+  image_id:
+    type: string
+    default: ''
+
+  instance_type:
+    type: string
+    default: m3.medium
+
+
+  #############################
+  # Upload Resources Inputs
+  #############################
+  dsl_resources:
+    description: >
+      Holds a set of dsl required resources
+    default:
+      - {'source_path': 'http://www.getcloudify.org/spec/aws-plugin/1.4.1/plugin.yaml', 'destination_path': '/spec/aws-plugin/1.4.1/plugin.yaml'}
+      - {'source_path': 'http://www.getcloudify.org/spec/fabric-plugin/1.4.1/plugin.yaml', 'destination_path': '/spec/fabric-plugin/1.4.1/plugin.yaml'}
+      - {'source_path': 'http://www.getcloudify.org/spec/cloudify/3.4.1/types.yaml', 'destination_path': '/spec/cloudify/3.4.1/types.yaml'}
+
+node_types:
+
+  cloudify.nodes.Docl:
+    derived_from: cloudify.nodes.SoftwareComponent
+    properties:
+      test_paths:
+        default: { get_input: test_paths }
+      cloudify_manager_blueprints_branch:
+        default: { get_input: cloudify_manager_blueprints_branch }
+      cloudify_manager_blueprints_org:
+        default: { get_input: cloudify_manager_blueprints_org }
+      rebuild:
+        default: { get_input: rebuild }
+      cloudify_packages:
+        default:
+          - package_name: cloudify-dsl-parser
+            branch: { get_input: cloudify_dsl_parser_branch }
+            org: { get_input: cloudify_dsl_parser_org }
+          - package_name: cloudify-rest-client
+            branch: { get_input: cloudify_rest_client_branch }
+            org: { get_input: cloudify_rest_client_org }
+          - package_name: cloudify-plugins-common
+            branch: { get_input: cloudify_plugins_common_branch }
+            org: { get_input: cloudify_plugins_common_org }
+          - package_name: cloudify-script-plugin
+            branch: { get_input: cloudify_script_plugin_branch }
+            org: { get_input: cloudify_script_plugin_org }
+          - package_name: cloudify-fabric-plugin
+            branch: { get_input: cloudify_fabric_plugin_branch }
+            org: { get_input: cloudify_fabric_plugin_org }
+          - package_name: cloudify-cli
+            branch: { get_input: cloudify_cli_branch }
+            org: { get_input: cloudify_cli_org }
+          - package_name: cloudify-amqp-influxdb
+            branch: { get_input: cloudify_amqp_influx_branch }
+            org: { get_input: cloudify_amqp_influx_org }
+          - package_name: cloudify-agent
+            branch: { get_input: cloudify_agent_branch }
+            org: { get_input: cloudify_agent_org }
+          - package_name: flask-securest
+            branch: { get_input: flask_securest_branch }
+            org: { get_input: flask_securest_org }
+          - package_name: cloudify-diamond-plugin
+            branch: { get_input: cloudify_diamond_plugin_branch }
+            org: { get_input: cloudify_diamond_plugin_org }
+          - package_name: { get_input: docl_package }
+            branch: { get_input: docl_branch }
+            org: { get_input: docl_org }
+          - package_name: cloudify-manager
+            branch: { get_input: cloudify_manager_branch }
+            org: { get_input: cloudify_manager_org }
+
+dsl_definitions:
+  aws_configuration: &aws_configuration
+    aws_access_key_id: { get_input: aws_access_key_id }
+    aws_secret_access_key: { get_input: aws_secret_access_key }
+    ec2_region_name: { get_input: ec2_region_name }
+
+
+node_templates:
+
+  keypair:
+    type: cloudify.aws.nodes.KeyPair
+    properties:
+      use_external_resource: { get_input: use_existing_keypair }
+      resource_id: { get_input: keypair_name }
+      private_key_path: { get_input: ssh_key_filename }
+      aws_config: *aws_configuration
+
+  security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      resource_id: { get_input: security_group_name }
+      use_external_resource: { get_input: use_existing_group }
+      description: Security group for docl VM
+      rules:
+        - ip_protocol: tcp
+          from_port: { get_input: ssh_port }
+          to_port: { get_input: ssh_port }
+          cidr_ip: 0.0.0.0/0
+      aws_config: *aws_configuration
+
+  server_ip:
+    type: cloudify.aws.nodes.ElasticIP
+    properties:
+      aws_config: *aws_configuration
+
+  host:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      resource_id: { get_input: server_name }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: instance_type }
+      install_agent: false
+      aws_config: *aws_configuration
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_keypair
+        target: keypair
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: security_group
+      - type: cloudify.aws.relationships.instance_connected_to_elastic_ip
+        target: server_ip
+
+  docl_node:
+    type: cloudify.nodes.Docl
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: host
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path: scripts/create.py
+            hide_output: &hide_output
+              - running
+            fabric_env: &manager_fabric_env
+              user: { get_input: ssh_user }
+              port: { get_input: ssh_port }
+              key_filename: { get_property: [keypair, private_key_path] }
+              host_string: { get_attribute: [server_ip, aws_resource_id] }
+        start:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path: scripts/run_tests.py
+            fabric_env:
+              user: { get_input: ssh_user }
+              port: { get_input: ssh_port }
+              key_filename: { get_property: [keypair, private_key_path] }
+              host_string: { get_attribute: [server_ip, aws_resource_id] }
+
+outputs:
+  docl_machine_ip:
+    description: Docl endpoint
+    value: { get_attribute: [server_ip, aws_resource_id] }

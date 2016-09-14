@@ -1,0 +1,115 @@
+inputs:
+  cloudify_dsl_parser_branch:
+    type: string
+    default: 'master'
+
+  cloudify_dsl_parser_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_rest_client_branch:
+    type: string
+    default: 'master'
+
+  cloudify_rest_client_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_plugins_common_branch:
+    type: string
+    default: 'master'
+
+  cloudify_plugins_common_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_script_plugin_branch:
+    type: string
+    default: 'master'
+
+  cloudify_script_plugin_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_fabric_plugin_branch:
+    type: string
+    default: 'master'
+
+  cloudify_fabric_plugin_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_cli_branch:
+    type: string
+    default: 'master'
+
+  cloudify_cli_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_amqp_influx_branch:
+    type: string
+    default: 'master'
+
+  cloudify_amqp_influx_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_agent_branch:
+    type: string
+    default: 'master'
+
+  cloudify_agent_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  flask_securest_branch:
+    type: string
+    default: 'master'
+
+  flask_securest_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_diamond_plugin_branch:
+    type: string
+    default: 'master'
+
+  cloudify_diamond_plugin_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_manager_branch:
+    type: string
+    default: 'master'
+
+  cloudify_manager_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  cloudify_manager_blueprints_branch:
+    type: string
+    default: 'master'
+
+  cloudify_manager_blueprints_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  docl_package:
+    type: string
+    default: 'docl'
+
+  docl_branch:
+    type: string
+    default: 'master'
+
+  docl_org:
+    type: string
+    default: 'cloudify-cosmo'
+
+  test_paths:
+    default: ['agent_tests', 'agentless_tests', 'manager_tests']
+
+  rebuild:
+    type: string
+    default: false
