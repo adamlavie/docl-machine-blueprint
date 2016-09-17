@@ -8,11 +8,11 @@ ctx.download_resource(
         join(dirname(__file__), 'utils.py'))
 import utils  # noqa
 
-TEST_GROUPS = ctx.node.properties['test_paths']
+tests_descriptor = ctx.node.properties['test_suites']
 
 
 def run_integration_tests():
-    ctx.logger.info('Running integration tests {0}'.format(TEST_GROUPS))
+    ctx.logger.info('Running integration tests {0}'.format(tests_descriptor))
     remote_script_path = join(utils.WORKDIR, 'run_tests.sh')
     ctx.download_resource(join('scripts', 'run_tests.sh'), remote_script_path)
     utils.sudo('chmod +x {0}'.format(remote_script_path))
@@ -20,16 +20,13 @@ def run_integration_tests():
     manager_test_path = os.path.join(utils.REPOS_DIR,
                                      'cloudify-manager',
                                      'tests', 'integration_tests')
+    suites_runner_path = os.path.join(manager_test_path, 'suites_runner.py')
 
+    utils.run('{0} {1} {2} {3}'.format(remote_script_path,
+                                       utils.CLOUDIFY_VENV_PATH,
+                                       suites_runner_path,
+                                       tests_descriptor),
+              out=True)
 
-    tests_descriptor = ''
-    for test_group in TEST_GROUPS:
-        tests_descriptor += '{0} '.format(manager_test_path,
-                                          os.path.join(test_group))
-    # tests_descriptor = '\'{0}\''.format(tests_descriptor)
-    # utils.run('{0} {1} {2}'.format(remote_script_path,
-    #                                utils.CLOUDIFY_VENV_PATH,
-    #                                tests_descriptor),
-    #           out=True)
-
-run_integration_tests()
+if tests_descriptor:
+    run_integration_tests()

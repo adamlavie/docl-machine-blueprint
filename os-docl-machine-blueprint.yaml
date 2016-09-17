@@ -67,9 +67,12 @@ node_types:
 
   cloudify.nodes.Docl:
     derived_from: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.exec_script:
+        execute: {}
     properties:
-      test_paths:
-        default: { get_input: test_paths }
+      test_suites:
+        default: { get_input: test_suites }
       cloudify_manager_blueprints_branch:
         default: { get_input: cloudify_manager_blueprints_branch }
       cloudify_manager_blueprints_org:
@@ -256,6 +259,17 @@ node_templates:
               port: { get_input: ssh_port }
               key_filename: { get_property: [keypair, private_key_path] }
               host_string: { get_attribute: [server_ip, floating_ip_address] }
+      cloudify.interfaces.exec_script:
+        execute:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path: upload_docker_image.sh
+            fabric_env:
+              user: { get_input: ssh_user }
+              port: { get_input: ssh_port }
+              key_filename: { get_property: [keypair, private_key_path] }
+              host_string: { get_attribute: [server_ip, floating_ip_address] }
+          executor: host_agent
 
 outputs:
   docl_machine_ip:

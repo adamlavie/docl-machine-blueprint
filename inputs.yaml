@@ -107,8 +107,9 @@ inputs:
     type: string
     default: 'cloudify-cosmo'
 
-  test_paths:
-    default: ['agent_tests', 'agentless_tests', 'manager_tests']
+  test_suites:
+    type: string
+    default: security#load#orchestration#backwards#rest#manager#manager_with_bootstrap#plugins_infrastructure#sanity
 
   rebuild:
     type: string

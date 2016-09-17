@@ -131,27 +131,13 @@ def _create_cloudify_bridge():
         utils.sudo('ip link set dev cfy0 up')
 
 
-def download_docker_util_script():
-    ctx.logger.info('Downloading docker image upload script...')
-    remote_script_path = join(utils.WORKDIR, 'upload_docker_image.sh')
-    ctx.download_resource('upload_docker_image.sh', remote_script_path)
-    utils.sudo('chmod +x {0}'.format(remote_script_path))
-
-    ctx.logger.info('Downloading .s3cfg configuration file...')
-    remote_config_path = join(utils.WORKDIR, '.s3cfg')
-    ctx.download_resource('s3cfg_template', remote_config_path)
-
-
 def main():
     print_packages_config(CLOUDIFY_PACKAGES)
     # install all of the required system level dependencies
     install_system_level_deps()
     # install all of the required cloudify python packages
     install_cloudify_packages()
-
     install_docker()
-
-    download_docker_util_script()
     # Run the docl_init.sh script
     run_docl_bootstrap_or_download()
 

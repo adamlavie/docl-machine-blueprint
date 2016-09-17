@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
+ctx download-resource "s3cfg_template" "/home/ubuntu/.s3cfg"
 
-SECRET_KEY=$1
-ACCESS_KEY=$2
+SECRET_KEY=$s3_user_key
+ACCESS_KEY=$s3_user_id
+S3_BUCKET=$s3_bucket
+
 
 sed -i "s~secret_key = XXX~secret_key = $SECRET_KEY~g" ~/.s3cfg
 sed -i "s~access_key = XXX~access_key = $ACCESS_KEY~g" ~/.s3cfg
@@ -18,5 +21,5 @@ pushd ~/repos/cloudify-manager-blueprints
 popd
 
 echo uploading docker image..
-s3cmd put --acl-public manager.tar.gz s3://cloudify-tests-files/docl-images/docl-manager.tar.gz
-s3cmd put --acl-public ~/image.sha1 s3://cloudify-tests-files/docl-images/docl-manager.sha1
+s3cmd put --acl-public manager.tar.gz $S3_BUCKET/docl-manager.tar.gz
+s3cmd put --acl-public ~/image.sha1 $S3_BUCKET/docl-manager.sha1

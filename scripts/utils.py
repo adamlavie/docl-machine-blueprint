@@ -28,10 +28,16 @@ def run(command, ignore_failures=False, workdir=None, out=False):
         while proc.poll() is None:
             for line in proc.stdout:
                 stdout += line
-                ctx.logger.info(line.rstrip())
+                try:
+                    ctx.logger.info(line.rstrip())
+                except:
+                    ctx.logger.debug('Failed printing stdout line')
             for line in proc.stderr:
                 stderr += line
-                ctx.logger.info(line.rstrip())
+                try:
+                    ctx.logger.info(line.rstrip())
+                except:
+                    ctx.logger.debug('Failed printing stderr line')
             sleep(2)
         ctx.logger.info(proc.stdout.read())
     else:
