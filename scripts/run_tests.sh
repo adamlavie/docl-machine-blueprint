@@ -3,13 +3,14 @@ set -e
 
 # remove /tmp/cloudify-ctx/ from python path. this causes module collision
 export PYTHONPATH=''
-export DOCKER_HOST=172.20.0.1
 
 VENV_PATH=$1
-TESTS=$2
+SUITE_RUNNER_PATH=$2
+TESTS=$3
 
 echo 'activating venv ' $VENV_PATH
 source $VENV_PATH/bin/activate
 
 echo 'running integration tests ' $TESTS
-nosetests -s -v --nologcapture $TESTS | tee ~/tests.out
+python $SUITE_RUNNER_PATH $TESTS
+
