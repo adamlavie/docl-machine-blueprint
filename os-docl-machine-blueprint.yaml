@@ -1,15 +1,16 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
-  The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
-  and simple web server started using Cloudify's script plugin.
-  In addition, an OpenStack floating ip and security group are created and associated with the created vm.
+  The blueprint provides a solution for executing the Cloudify integration tests on an Openstack environment.
+  In addition, this blueprint provides some custom CI operations such as uploading the Cloudify docker image to
+  S3 for use in other test executions.
+
 
 imports:
   - http://www.getcloudify.org/spec/fabric-plugin/1.4.1/plugin.yaml
   - http://www.getcloudify.org/spec/cloudify/3.4.1/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.4/plugin.yaml
-  - inputs.yaml
+  - docl-base-types.yaml
 
 inputs:
   image_id:
@@ -58,65 +59,6 @@ inputs:
     default: ''
   neutron_url:
     default: ''
-  ssh_user:
-    default: ''
-  ssh_port:
-    default: 22
-
-node_types:
-
-  cloudify.nodes.Docl:
-    derived_from: cloudify.nodes.SoftwareComponent
-    interfaces:
-      cloudify.interfaces.exec_script:
-        execute: {}
-    properties:
-      test_suites:
-        default: { get_input: test_suites }
-      cloudify_manager_blueprints_branch:
-        default: { get_input: cloudify_manager_blueprints_branch }
-      cloudify_manager_blueprints_org:
-        default: { get_input: cloudify_manager_blueprints_org }
-      rebuild:
-        default: { get_input: rebuild }
-      cloudify_packages:
-        default:
-          - package_name: cloudify-dsl-parser
-            branch: { get_input: cloudify_dsl_parser_branch }
-            org: { get_input: cloudify_dsl_parser_org }
-          - package_name: cloudify-rest-client
-            branch: { get_input: cloudify_rest_client_branch }
-            org: { get_input: cloudify_rest_client_org }
-          - package_name: cloudify-plugins-common
-            branch: { get_input: cloudify_plugins_common_branch }
-            org: { get_input: cloudify_plugins_common_org }
-          - package_name: cloudify-script-plugin
-            branch: { get_input: cloudify_script_plugin_branch }
-            org: { get_input: cloudify_script_plugin_org }
-          - package_name: cloudify-fabric-plugin
-            branch: { get_input: cloudify_fabric_plugin_branch }
-            org: { get_input: cloudify_fabric_plugin_org }
-          - package_name: cloudify-cli
-            branch: { get_input: cloudify_cli_branch }
-            org: { get_input: cloudify_cli_org }
-          - package_name: cloudify-amqp-influxdb
-            branch: { get_input: cloudify_amqp_influx_branch }
-            org: { get_input: cloudify_amqp_influx_org }
-          - package_name: cloudify-agent
-            branch: { get_input: cloudify_agent_branch }
-            org: { get_input: cloudify_agent_org }
-          - package_name: flask-securest
-            branch: { get_input: flask_securest_branch }
-            org: { get_input: flask_securest_org }
-          - package_name: cloudify-diamond-plugin
-            branch: { get_input: cloudify_diamond_plugin_branch }
-            org: { get_input: cloudify_diamond_plugin_org }
-          - package_name: { get_input: docl_package }
-            branch: { get_input: docl_branch }
-            org: { get_input: docl_org }
-          - package_name: cloudify-manager
-            branch: { get_input: cloudify_manager_branch }
-            org: { get_input: cloudify_manager_org }
 
 dsl_definitions:
   openstack_configuration: &openstack_configuration
@@ -243,8 +185,6 @@ node_templates:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
             script_path: scripts/create.py
-            hide_output: &hide_output
-              - running
             fabric_env: &manager_fabric_env
               user: { get_input: ssh_user }
               port: { get_input: ssh_port }
@@ -254,21 +194,12 @@ node_templates:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
             script_path: scripts/run_tests.py
-            fabric_env:
-              user: { get_input: ssh_user }
-              port: { get_input: ssh_port }
-              key_filename: { get_property: [keypair, private_key_path] }
-              host_string: { get_attribute: [server_ip, floating_ip_address] }
-      cloudify.interfaces.exec_script:
+            fabric_env: *manager_fabric_env
         execute:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
             script_path: upload_docker_image.sh
-            fabric_env:
-              user: { get_input: ssh_user }
-              port: { get_input: ssh_port }
-              key_filename: { get_property: [keypair, private_key_path] }
-              host_string: { get_attribute: [server_ip, floating_ip_address] }
+            fabric_env: *manager_fabric_env
           executor: host_agent
 
 outputs:

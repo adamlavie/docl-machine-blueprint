@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-ctx download-resource "s3cfg_template" "/home/ubuntu/.s3cfg"
+ctx download-resource "config/s3cfg_template" "/home/ubuntu/.s3cfg"
 
 SECRET_KEY=$s3_user_key
 ACCESS_KEY=$s3_user_id
