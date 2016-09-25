@@ -27,7 +27,10 @@ MANAGER_BLUEPRINTS_REPO = {
 
 PYTHON_DEPENDENCIES = [('nose', '1.3.7'),
                        ('python-dateutil', '2.5.3'),
-                       ('jinja2', '2.7.2')]
+                       # Jinja is installed in a newer version
+                       # but cfy requires v2.7.2
+                       ('jinja2', '2.7.2'),
+                       ('requests', '2.7.0')]
 
 
 def print_packages_config(packages):
@@ -82,7 +85,7 @@ def run_docl_bootstrap_or_download():
     ctx.logger.info('Preparing docl bootstrap execution')
     docl_script_path = join(utils.WORKDIR, 'docl_init.sh')
     ctx.download_resource(join('scripts', 'docl_init.sh'), docl_script_path)
-    utils.sudo('chmod +x {0}'.format(docl_script_path))
+    utils.run('chmod +x {0}'.format(docl_script_path))
 
     ctx.logger.info('Cloning cloudify manager blueprints {0}'
                     .format(MANAGER_BLUEPRINTS_REPO))
@@ -111,10 +114,11 @@ def install_docker():
     script_name = 'get_docker.sh'
     utils.run('curl -o {0} https://get.docker.com/'.format(script_name),
               workdir=utils.WORKDIR)
-    utils.sudo('chmod +x {0}'.format(script_name), workdir=utils.WORKDIR)
+    utils.run('chmod +x {0}'.format(script_name), workdir=utils.WORKDIR)
     utils.sudo('bash {0}'.format(script_name), workdir=utils.WORKDIR)
 
-    utils.sudo('usermod -aG docker {0}'.format('ubuntu'))
+    utils.sudo('usermod -aG docker {0}'
+               .format(ctx.node.properties['ssh_user']))
     utils.sudo('service docker stop')
     _create_cloudify_bridge()
     utils.sudo("sed -i '$ a DOCKER_OPTS=\"--bridge cfy0 "

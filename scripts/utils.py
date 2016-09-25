@@ -38,7 +38,7 @@ def run(command, ignore_failures=False, workdir=None, out=False):
                     ctx.logger.info(line.rstrip())
                 except:
                     ctx.logger.debug('Failed printing stderr line')
-            sleep(2)
+            sleep(0.1)
         ctx.logger.info(proc.stdout.read())
     else:
         stdout, stderr = proc.communicate()
@@ -83,11 +83,8 @@ def clone(package_name, branch, org, clone_dir=REPOS_DIR):
         clone_path = 'https://github.com/{0}/{1}.git'\
             .format(org, package_name)
         run('git clone {0} {1}'.format(clone_path, package_path))
-        run('git checkout {0}'.format(branch), workdir=package_path)
-    else:
-        run('git checkout {0}'.format(branch), workdir=package_path)
-        run('git pull', workdir=package_path)
 
+    run('git checkout {0}'.format(branch), workdir=package_path)
     return package_path
 
 
@@ -108,9 +105,9 @@ def pip_install(package_name='',
 
 
 def pip_install_manager_deps(package_path, venv_path=CLOUDIFY_VENV_PATH):
-    pip_install(package_path=os.path.join(package_path, 'tests'),
-                venv_path=venv_path)
     pip_install(package_path=os.path.join(package_path, 'rest-service'),
+                venv_path=venv_path)
+    pip_install(package_path=os.path.join(package_path, 'tests'),
                 venv_path=venv_path)
 
 
